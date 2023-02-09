@@ -1,12 +1,12 @@
 # Air Quality Report (Draft Version)
 
-get_all_info `http://vjump.my.to/get_all_info`
+get_all_info `https://airquality.zeqa.net/get_all_info`
 ```
 [{"datetime":"2023-02-09T22:50:53.115000","temperature":26,"humidity":70,"CO":4.99},...]
 
 ```
 
-endpoint `http://vjump.my.to/color`
+endpoint `https://airquality.zeqa.net/color`
 
 body
 ```
