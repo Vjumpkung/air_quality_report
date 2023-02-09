@@ -23,4 +23,4 @@ client = MongoClient(
     + _database
 )
 
-# client = MongoClient("localhost", port=27017)
+# client = MongoClient("192.168.1.59", port=27017)
