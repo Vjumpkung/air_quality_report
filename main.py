@@ -3,6 +3,8 @@ from router import air_quality
 from config import database
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
+from pymongo import DESCENDING
 
 collection = database.client["exceed06"]["test_db"]
 
@@ -34,13 +36,19 @@ def root():
 @app.get("/get_all_info")
 def test():
     # for test only
-    return list(collection.find({}, {"_id": 0}))
+    return list(collection.find({}, {"_id": 0}).sort("datetime", DESCENDING).limit(10))
 
 
 @app.post("/color")
 def test(data: Data):
+    date_now = datetime.now()
     collection.insert_one(
-        {"temperature": data.temperature, "humidity": data.humidity, "CO": data.co}
+        {
+            "datetime": date_now,
+            "temperature": data.temperature,
+            "humidity": data.humidity,
+            "CO": data.co,
+        }
     )
     color = {}
     # temperature color
