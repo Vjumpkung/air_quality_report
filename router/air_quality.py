@@ -9,9 +9,46 @@ from basemodel_class.basemodel_collection import Data
 router = APIRouter(prefix="/air_quality", tags=["air_quality"])
 collection = database.client["exceed06"]["air_quality"]
 
+led_collection = database.client["exceed06"]["led_status"]
+
+
+def calculate_status_temp(temp):
+    if temp > 40:
+        return "Very Hot"
+    elif 35 <= temp <= 39.9:
+        return "Hot"
+    elif 23 <= temp <= 34.9:
+        return "Normal"
+    elif 18 <= temp <= 22.9:
+        return "Cool"
+    elif 16 <= temp <= 17.9:
+        return "Moderately Cold"
+    elif 8 <= temp <= 15.9:
+        return "Cold"
+    elif temp >= 7.9:
+        return "Very Cold"
+
+
+def calculate_status_humidity(humidity):
+    if 0 <= humidity < 40:
+        return "Too Dry"
+    elif 40 <= humidity < 60:
+        return "Optimal"
+    elif 60 <= humidity:
+        return "Too Humid"
+
 
 def calculate_status_co(co):
-    pass
+    if 0 <= co < 4.5:
+        return "Very Good"
+    elif 4.5 <= co < 6.5:
+        return "Good"
+    elif 6.5 <= co < 9:
+        return "Normal"
+    elif 9.0 <= co < 30:
+        return "Health affected"
+    elif 30 <= co:
+        return "Dangerous"
 
 
 @router.get("/")
