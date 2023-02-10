@@ -256,7 +256,7 @@ def clear_database():
 
 
 @router.get("/subscribe_line_notify/")
-def subscribe():
+def subscribe_line_notify():
     url = f"https://notify-bot.line.me/oauth/authorize?response_type=code&client_id={config('CLIENT_ID_NOTIFY')}" \
           f"&redirect_uri={config('REDIRECT_URI_NOTIFY')}&scope=notify&state=testing123 "
     return RedirectResponse(url)
