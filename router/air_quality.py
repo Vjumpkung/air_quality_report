@@ -106,12 +106,12 @@ def get_most_recent_log():
     recent_log = collection.find_one({}, {"_id": 0})
     return [
         {
-            "temperature": recent_log.temperature,
-            "humidity": recent_log.humidity,
-            "CO": recent_log.CO,
-            "temperature_status": calculate_status_temp(recent_log.temperature),
-            "humidity_status": calculate_status_humidity(recent_log.humidity),
-            "CO_status": calculate_status_co(recent_log.CO),
+            "temperature": recent_log["temperature"],
+            "humidity": recent_log["humidity"],
+            "CO": recent_log["CO"],
+            "temperature_status": calculate_status_temp(recent_log["temperature"]),
+            "humidity_status": calculate_status_humidity(recent_log["humidity"]),
+            "CO_status": calculate_status_co(recent_log["CO"]),
         }
     ]
 
@@ -203,28 +203,30 @@ def update_data(data: Data):
     return color
 
 
-@router.post("/turn_on/{sensor_type}")
+@router.post("/turn_on/{sensor_type}/")
 def turn_on_led(sensor_type: str):
     """
     sensor_type = "temperature"/ "humidity" / "co"
-    Set status of LED that show status of {device_name} to True.
+    Set status of LED that show status of {sensor_type} to True.
     """
     if sensor_type not in ["temperature", "humidity", "co"]:
         return HTTPException(status_code=406, detail="Sensor type is invalid.")
     led_collection.update_one({"sensor_type": sensor_type}, {"$set": {"status": True}})
-    return f"led of {sensor_type} is turned on"
+    print(f"led of {sensor_type} is turned on")
+    return {sensor_type: True}
 
 
-@router.post("/turn_off/{sensor_type}")
+@router.post("/turn_off/{sensor_type}/")
 def turn_off_led(sensor_type: str):
     """
     sensor_type = "temperature"/ "humidity" / "co"
-    Set status of LED that show status of {device_name} to False.
+    Set status of LED that show status of {sensor_type} to False.
     """
     if sensor_type not in ["temperature", "humidity", "co"]:
         return HTTPException(status_code=406, detail="Sensor type is invalid.")
     led_collection.update_one({"sensor_type": sensor_type}, {"$set": {"status": False}})
-    return f"led of {sensor_type} is turned off"
+    print(f"led of {sensor_type} is turned off")
+    return {sensor_type: False}
 
 
 @router.get("/clear_database/")
