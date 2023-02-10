@@ -59,6 +59,8 @@ def air_test():
 @router.get("/get_last_ten_minutes_logs/")
 def get_last_ten_minutes_logs():
     """Return the last 120 logs in the database."""
+    if len(list(collection.find({}))) < 120:
+        raise HTTPException(503, "data is not enough please try again")
     lst = []
     time = 1
     skip = 0
