@@ -5,6 +5,7 @@ from config import database
 router = APIRouter(prefix="/air_quality", tags=["air_quality"])
 collection = database.client["exceed06"]["air_quality"]
 
+led_collection = database.client["exceed06"]["led_status"]
 
 
 @router.get("/")
@@ -28,27 +29,29 @@ def get_most_recent_log():
 def update_data():
     """
     Save data to the database adding datetime with the above body.
-    Receive data from hardware and return RGB color of temperature, humidity, and co.
+    Return RGB color of temperature, humidity, and co.
     """
     pass
 
 
-@router.post("/turn_on/{device_name}")
-def turn_on_led():
+@router.post("/turn_on/{sensor_type}")
+def turn_on_led(sensor_type: str):
     """
-    device_name = "temperature"/ "humidity" / "co"
+    sensor_type = "temperature"/ "humidity" / "co"
     Set status of LED that show status of {device_name} to True.
     """
-    pass
+    led_collection.update_one({'sensor_type': sensor_type}, {"$set": {"status": True}})
+    return f"led of {sensor_type} is turned on"
 
 
-@router.post("/turn_off/{device_name}")
-def turn_off_led():
+@router.post("/turn_off/{sensor_type}")
+def turn_off_led(sensor_type: str):
     """
-    device_name = "temperature"/ "humidity" / "co"
+    sensor_type = "temperature"/ "humidity" / "co"
     Set status of LED that show status of {device_name} to False.
     """
-    pass
+    led_collection.update_one({'sensor_type': sensor_type}, {"$set": {"status": False}})
+    return f"led of {sensor_type} is turned off"
 
 
 @router.get("/clear_database/")
