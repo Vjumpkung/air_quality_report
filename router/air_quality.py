@@ -9,6 +9,7 @@ collection = database.client["exceed06"]["air_quality"]
 
 led_collection = database.client["exceed06"]["led_status"]
 
+
 def calculate_status_temp(temp):
     if temp > 40:
         return "Very Hot"
@@ -26,11 +27,26 @@ def calculate_status_temp(temp):
         return "Very Cold"
 
 
-def calculate_status_humidity(humid):
+def calculate_status_humidity(humidity):
+    if 0 <= humidity < 40:
+        return "Too Dry"
+    elif 40 <= humidity < 60:
+        return "Optimal"
+    elif 60 <= humidity:
+        return "Too Humid"
 
 
 def calculate_status_co(co):
-
+    if 0 <= co < 4.5:
+        return "Very Good"
+    elif 4.5 <= co < 6.5:
+        return "Good"
+    elif 6.5 <= co < 9:
+        return "Normal"
+    elif 9.0 <= co < 30:
+        return "Health affected"
+    elif 30 <= co:
+        return "Dangerous"
 
 
 @router.get("/")
