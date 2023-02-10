@@ -1,6 +1,13 @@
 """A module that keep methods related to line notification."""
 import requests
-from decouple import config
+from dotenv import load_dotenv
+import urllib
+import os
+
+load_dotenv(".env")
+REDIRECT_URI_NOTIFY = urllib.parse.quote(os.getenv("REDIRECT_URI_NOTIFY"))
+CLIENT_ID_NOTIFY = urllib.parse.quote(os.getenv("CLIENT_ID_NOTIFY"))
+CLIENT_SECRET_NOTIFY = urllib.parse.quote(os.getenv("CLIENT_SECRET_NOTIFY"))
 
 
 def get_access_token(code):
@@ -9,9 +16,9 @@ def get_access_token(code):
     content_type = "application/x-www-form-urlencoded"
 
     grant_type = "authorization_code"
-    redirect_uri = config('REDIRECT_URI_NOTIFY', default="line_callback_url")
-    client_id = config('CLIENT_ID_NOTIFY', default="line_notify_client_id")
-    client_secret = config('CLIENT_SECRET_NOTIFY', default="line_notify_client_id")
+    redirect_uri = REDIRECT_URI_NOTIFY
+    client_id = CLIENT_ID_NOTIFY
+    client_secret = CLIENT_SECRET_NOTIFY
     headers = {'Content-Type': content_type}
     data = {
         "grant_type": grant_type,
