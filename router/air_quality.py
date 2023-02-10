@@ -12,7 +12,7 @@ collection = database.client["exceed06"]["air_quality"]
 led_collection = database.client["exceed06"]["led_status"]
 
 
-def calculate_status_temp(temp):
+def calculate_status_temp(temp: int) -> str:
     if temp > 40:
         return "Very Hot"
     elif 35 <= temp <= 39.9:
@@ -29,7 +29,7 @@ def calculate_status_temp(temp):
         return "Very Cold"
 
 
-def calculate_status_humidity(humidity):
+def calculate_status_humidity(humidity: int) -> str:
     if 0 <= humidity < 40:
         return "Too Dry"
     elif 40 <= humidity < 60:
@@ -38,16 +38,16 @@ def calculate_status_humidity(humidity):
         return "Too Humid"
 
 
-def calculate_status_co(co):
-    if 0 <= co < 4.5:
+def calculate_status_co(co: int) -> str:
+    if 0 <= co < 780:
         return "Very Good"
-    elif 4.5 <= co < 6.5:
+    elif 780 <= co < 1160:
         return "Good"
-    elif 6.5 <= co < 9:
+    elif 1160 <= co < 1540:
         return "Normal"
-    elif 9.0 <= co < 30:
+    elif 1540 <= co < 1920:
         return "Health affected"
-    elif 30 <= co:
+    elif 1920 <= co:
         return "Dangerous"
 
 
@@ -132,23 +132,23 @@ def update_data(data: Data):
         color["humidity_G"] = 105
         color["humidity_B"] = 177
     # CO AQI range
-    if 0 <= data.co < 4.5:
+    if 0 <= data.co < 780:
         color["CO_R"] = 0
         color["CO_G"] = 204
         color["CO_B"] = 255
-    elif 4.5 <= data.co < 6.5:
+    elif 780 <= data.co < 1160:
         color["CO_R"] = 0
         color["CO_G"] = 255
         color["CO_B"] = 0
-    elif 6.5 <= data.co < 9:
+    elif 1160 <= data.co < 1540:
         color["CO_R"] = 255
         color["CO_G"] = 255
         color["CO_B"] = 0
-    elif 9.0 <= data.co < 30:
+    elif 1540 <= data.co < 1920:
         color["CO_R"] = 255
         color["CO_G"] = 153
         color["CO_B"] = 51
-    elif 30 <= data.co:
+    elif 1920 <= data.co:
         color["CO_R"] = 255
         color["CO_G"] = 0
         color["CO_B"] = 0
