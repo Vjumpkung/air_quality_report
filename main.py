@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Body
 from router import air_quality
 from config import database
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from pymongo import DESCENDING
+from basemodel_class.basemodel_collection import Data
 
 collection = database.client["exceed06"]["test_db"]
 
@@ -20,12 +20,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-class Data(BaseModel):
-    temperature: int
-    humidity: int
-    co: float
 
 
 @app.get("/")
@@ -99,7 +93,7 @@ def test(data: Data):
         color["humidity_G"] = 105
         color["humidity_B"] = 177
     # CO AQI range
-    if 0 <= data.co < 4.4:
+    if 0 <= data.co < 4.5:
         color["CO_R"] = 0
         color["CO_G"] = 204
         color["CO_B"] = 255
@@ -119,15 +113,4 @@ def test(data: Data):
         color["CO_R"] = 255
         color["CO_G"] = 0
         color["CO_B"] = 0
-    print(
-        list(
-            collection.find(
-                {
-                    "temperature": data.temperature,
-                    "humidity": data.humidity,
-                    "CO": data.co,
-                }
-            )
-        )
-    )
     return color
