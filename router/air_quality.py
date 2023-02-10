@@ -4,9 +4,12 @@ from config import database
 import datetime
 from zoneinfo import ZoneInfo
 from basemodel_class.basemodel_collection import Data
-from notification import get_access_token, send_notification
+from notification import get_access_token, send_notification, REDIRECT_URI_NOTIFY,\
+    CLIENT_ID_NOTIFY, CLIENT_SECRET_NOTIFY
 from fastapi.responses import RedirectResponse
-from decouple import config
+from dotenv import load_dotenv
+import urllib
+import os
 
 
 router = APIRouter(prefix="/air_quality", tags=["air_quality"])
@@ -14,6 +17,13 @@ collection = database.client["exceed06"]["air_quality"]
 
 led_collection = database.client["exceed06"]["led_status"]
 user_collection = database.client["exceed06"]["user"]
+
+load_dotenv(".env")
+_host = urllib.parse.quote(os.getenv("host"))
+_port = urllib.parse.quote(os.getenv("port"))
+_username = urllib.parse.quote(os.getenv("user"))
+_password = urllib.parse.quote(os.getenv("password"))
+_database = urllib.parse.quote(os.getenv("database"))
 
 
 def calculate_status_temp(temp: int) -> str:
@@ -257,8 +267,8 @@ def clear_database():
 
 @router.get("/subscribe_line_notify/")
 def subscribe_line_notify():
-    url = f"https://notify-bot.line.me/oauth/authorize?response_type=code&client_id={config('CLIENT_ID_NOTIFY')}" \
-          f"&redirect_uri={config('REDIRECT_URI_NOTIFY')}&scope=notify&state=testing123 "
+    url = f"https://notify-bot.line.me/oauth/authorize?response_type=code&client_id={CLIENT_ID_NOTIFY}" \
+          f"&redirect_uri={REDIRECT_URI_NOTIFY}&scope=notify&state=testing123 "
     return RedirectResponse(url)
 
 
@@ -279,11 +289,17 @@ def send_notification_to_subscriber():
     humid_status = calculate_status_humidity(int(recent_log["humidity"]))
     co_status = calculate_status_co(int(recent_log["CO"]))
     message = f"\nAt {recent_log['datetime'].date()} {str(recent_log['datetime'].time()).split('.')[0]}\n\n"
+    need_warning = False
     if temp_status in ["Very Hot", "Hot", "Cold", "Very Cold"]:
         message += f"Temperature is {temp_status} \n ({recent_log['temperature']} °C).\n\n"
+        need_warning = True
     if humid_status in ["Too Dry", "Too Humid"]:
         message += f"Humidity is {humid_status} \n({recent_log['humidity']} %).\n\n"
+        need_warning = True
     if co_status in ["Health affected", "Dangerous"]:
-        message += f"Carbon Monoxide Level is {co_status} ({recent_log['CO']} unit)."
-    for user in all_user:
-        send_notification(message, user["token"])
+        message += f"Carbon Monoxide Level is {co_status} ({recent_log['CO']} unit).\n\n"
+        need_warning = True
+
+    if need_warning:
+        for user in all_user:
+            send_notification(message, user["token"])
