@@ -7,9 +7,6 @@ from basemodel_class.basemodel_collection import Data
 from notification import get_access_token, send_notification, REDIRECT_URI_NOTIFY,\
     CLIENT_ID_NOTIFY, CLIENT_SECRET_NOTIFY
 from fastapi.responses import RedirectResponse
-from dotenv import load_dotenv
-import urllib
-import os
 
 
 router = APIRouter(prefix="/air_quality", tags=["air_quality"])
@@ -17,13 +14,6 @@ collection = database.client["exceed06"]["air_quality"]
 
 led_collection = database.client["exceed06"]["led_status"]
 user_collection = database.client["exceed06"]["user"]
-
-load_dotenv(".env")
-_host = urllib.parse.quote(os.getenv("host"))
-_port = urllib.parse.quote(os.getenv("port"))
-_username = urllib.parse.quote(os.getenv("user"))
-_password = urllib.parse.quote(os.getenv("password"))
-_database = urllib.parse.quote(os.getenv("database"))
 
 
 def calculate_status_temp(temp: int) -> str:
