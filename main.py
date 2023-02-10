@@ -2,7 +2,7 @@ from fastapi import FastAPI, Body
 from router import air_quality
 from config import database
 from fastapi.middleware.cors import CORSMiddleware
-from basemodel_class.basemodel_collection import Data
+
 
 collection = database.client["exceed06"]["test_db"]
 
