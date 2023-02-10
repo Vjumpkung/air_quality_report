@@ -91,6 +91,8 @@ def turn_on_led(sensor_type: str):
     sensor_type = "temperature"/ "humidity" / "co"
     Set status of LED that show status of {device_name} to True.
     """
+    if sensor_type not in ["temperature", "humidity", "co"]:
+        return HTTPException(status_code=406, detail="Sensor type is invalid.")
     led_collection.update_one({'sensor_type': sensor_type}, {"$set": {"status": True}})
     return f"led of {sensor_type} is turned on"
 
@@ -101,6 +103,8 @@ def turn_off_led(sensor_type: str):
     sensor_type = "temperature"/ "humidity" / "co"
     Set status of LED that show status of {device_name} to False.
     """
+    if sensor_type not in ["temperature", "humidity", "co"]:
+        return HTTPException(status_code=406, detail="Sensor type is invalid.")
     led_collection.update_one({'sensor_type': sensor_type}, {"$set": {"status": False}})
     return f"led of {sensor_type} is turned off"
 
