@@ -97,7 +97,6 @@ def get_most_recent_log():
     }]
 
 
-
 @router.post("/update_data/")
 def update_data(data: Data):
     """
