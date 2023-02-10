@@ -95,7 +95,7 @@ def get_last_ten_minutes_logs():
         avg_temp_lst.clear()
         avg_humid_lst.clear()
         avg_co_lst.clear()
-    return lst
+    return lst[::-1]
 
 
 @router.get("/get_most_recent_log/")
@@ -207,7 +207,10 @@ def turn_on_led(sensor_type: str):
     sensor_type = "temperature"/ "humidity" / "co"
     Set status of LED that show status of {device_name} to True.
     """
-    pass
+    if sensor_type not in ["temperature", "humidity", "co"]:
+        return HTTPException(status_code=406, detail="Sensor type is invalid.")
+    led_collection.update_one({"sensor_type": sensor_type}, {"$set": {"status": True}})
+    return f"led of {sensor_type} is turned on"
 
 
 @router.post("/turn_off/{sensor_type}")
@@ -216,7 +219,10 @@ def turn_off_led(sensor_type: str):
     sensor_type = "temperature"/ "humidity" / "co"
     Set status of LED that show status of {device_name} to False.
     """
-    pass
+    if sensor_type not in ["temperature", "humidity", "co"]:
+        return HTTPException(status_code=406, detail="Sensor type is invalid.")
+    led_collection.update_one({"sensor_type": sensor_type}, {"$set": {"status": False}})
+    return f"led of {sensor_type} is turned off"
 
 
 @router.get("/clear_database/")
