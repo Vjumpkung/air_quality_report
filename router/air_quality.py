@@ -229,6 +229,12 @@ def turn_off_led(sensor_type: str):
     return {sensor_type: False}
 
 
+@router.get("/get_led_status/")
+def get_led_status():
+    """Get status of all led."""
+    return list(led_collection.find({}, {"_id": 0}))
+
+
 @router.get("/clear_database/")
 def clear_database():
     collection.delete_many(
