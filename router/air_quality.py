@@ -232,7 +232,10 @@ def turn_off_led(sensor_type: str):
 @router.get("/get_led_status/")
 def get_led_status():
     """Get status of all led."""
-    return list(led_collection.find({}, {"_id": 0}))
+    result = {}
+    for i in led_collection.find({}, {"_id": False}):
+        result[i["sensor_type"]] = i["status"]
+    return result
 
 
 @router.get("/clear_database/")
