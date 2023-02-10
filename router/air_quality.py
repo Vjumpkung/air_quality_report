@@ -80,7 +80,7 @@ def get_last_ten_minutes_logs():
         avg_temp_lst.clear()
         avg_humid_lst.clear()
         avg_co_lst.clear()
-    return lst
+    return lst[::-1]
 
 
 @router.get("/get_most_recent_log/")
