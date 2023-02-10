@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Body
+from zoneinfo import ZoneInfo
 from router import air_quality
 from config import database
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+from datetime import datetime, timedelta
 from pymongo import DESCENDING
 from basemodel_class.basemodel_collection import Data
 
@@ -114,3 +115,15 @@ def test(data: Data):
         color["CO_G"] = 0
         color["CO_B"] = 0
     return color
+
+
+@app.get("/clear_database/")
+def clear_database():
+    collection.delete_many(
+        {
+            "datetime": {
+                "$lt": datetime.now(ZoneInfo("Asia/Bangkok")) - timedelta(days=1)
+            }
+        }
+    )
+    return {"status": "delete complete"}
