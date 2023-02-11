@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Body, HTTPException
 from pymongo import DESCENDING
 from config import database
-import urllib
 import datetime
 from zoneinfo import ZoneInfo
 from basemodel_class.basemodel_collection import Data
@@ -26,6 +25,7 @@ user_collection = database.client["exceed06"]["user"]
 
 
 def calculate_status_temp(temp: int) -> str:
+    """Return the string status from the given temperature number."""
     if temp >= 40:
         return "Very Hot"
     elif 35 <= temp <= 39.9:
@@ -43,6 +43,7 @@ def calculate_status_temp(temp: int) -> str:
 
 
 def calculate_status_humidity(humidity: int) -> str:
+    """Return the string status from the given humidity number."""
     if 0 <= humidity < 40:
         return "Too Dry"
     elif 40 <= humidity < 60:
@@ -52,6 +53,7 @@ def calculate_status_humidity(humidity: int) -> str:
 
 
 def calculate_status_co(co: int) -> str:
+    """Return the string status from the given co number."""
     if 0 <= co < 780:
         return "Very Good"
     elif 780 <= co < 1160:
@@ -255,6 +257,7 @@ def get_led_status():
 
 @router.get("/clear_database/")
 def clear_database():
+    """Delete data older than 24 hours."""
     collection.delete_many(
         {
             "datetime": {
@@ -268,6 +271,7 @@ def clear_database():
 
 @router.get("/subscribe_line_notify/")
 def subscribe_line_notify():
+    """Redirect to LINE Notify authorization endpoint."""
     url = (
         f"https://notify-bot.line.me/oauth/authorize?response_type=code&client_id={CLIENT_ID_NOTIFY}"
         f"&redirect_uri={REDIRECT_URI_NOTIFY}&scope=notify&state=testing123 "
@@ -277,6 +281,7 @@ def subscribe_line_notify():
 
 @router.get("/subscribe_line_notify_callback/")
 def subscribe_line_notify_callback(code: str):
+    """Get token from the given code and store it in the database."""
     token = get_access_token(code)
     send_notification("Thank you for subscribing us", token)
     user_collection.insert_one({"token": token})
@@ -286,27 +291,16 @@ def subscribe_line_notify_callback(code: str):
 
 @router.get("/send_notification_to_subscriber/")
 def send_notification_to_subscriber():
-    recent_log = collection.find_one({}, {"_id": 0})
+    """Send notification to user if the any number is irregular."""
+    recent_log = list(
+        collection.find({}, {"_id": 0}).sort("datetime", DESCENDING).limit(1)
+    )[0]
     all_user = user_collection.find({}, {"_id": 0})
-    temp_status = calculate_status_temp(int(recent_log["temperature"]))
-    humid_status = calculate_status_humidity(int(recent_log["humidity"]))
     co_status = calculate_status_co(int(recent_log["CO"]))
     message = f"\nAt {recent_log['datetime'].date()} {str(recent_log['datetime'].time()).split('.')[0]}\n\n"
-    need_warning = False
-    if temp_status in ["Very Hot", "Hot", "Cold", "Very Cold"]:
-        message += (
-            f"Temperature is {temp_status} \n ({recent_log['temperature']} °C).\n\n"
-        )
-        need_warning = True
-    if humid_status in ["Too Dry", "Too Humid"]:
-        message += f"Humidity is {humid_status} \n({recent_log['humidity']} %).\n\n"
-        need_warning = True
     if co_status in ["Health affected", "Dangerous"]:
         message += (
             f"Carbon Monoxide Level is {co_status} ({recent_log['CO']} unit).\n\n"
         )
-        need_warning = True
-
-    if need_warning:
         for user in all_user:
             send_notification(message, user["token"])
