@@ -116,7 +116,9 @@ def get_last_ten_minutes_logs():
 @router.get("/get_most_recent_log/")
 def get_most_recent_log():
     """Return the most recent log in the database."""
-    recent_log = collection.find_one({}, {"_id": 0})
+    recent_log = list(
+        collection.find({}, {"_id": 0}).sort("datetime", DESCENDING).limit(1)
+    )[0]
     return [
         {
             "temperature": recent_log["temperature"],
