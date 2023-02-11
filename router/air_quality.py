@@ -18,7 +18,7 @@ from fastapi.responses import RedirectResponse
 load_dotenv(".env")
 
 router = APIRouter(prefix="/air_quality", tags=["air_quality"])
-collection = database.client["exceed06"]["test_db"]
+collection = database.client["exceed06"]["air_quality"]
 
 led_collection = database.client["exceed06"]["led_status"]
 user_collection = database.client["exceed06"]["user"]
@@ -118,8 +118,9 @@ def get_last_ten_minutes_logs():
 @router.get("/get_most_recent_log/")
 def get_most_recent_log():
     """Return the most recent log in the database."""
-    recent_log = collection.find({}, {"_id": 0}).sort("datetime", DESCENDING)[0]
-
+    recent_log = list(
+        collection.find({}, {"_id": 0}).sort("datetime", DESCENDING).limit(1)
+    )[0]
     return [
         {
             "temperature": recent_log["temperature"],
@@ -291,7 +292,9 @@ def subscribe_line_notify_callback(code: str):
 @router.get("/send_notification_to_subscriber/")
 def send_notification_to_subscriber():
     """Send notification to user if the any number is irregular."""
-    recent_log = collection.find_one({}, {"_id": 0})
+    recent_log = list(
+        collection.find({}, {"_id": 0}).sort("datetime", DESCENDING).limit(1)
+    )[0]
     all_user = user_collection.find({}, {"_id": 0})
     co_status = calculate_status_co(int(recent_log["CO"]))
     message = f"\nAt {recent_log['datetime'].date()} {str(recent_log['datetime'].time()).split('.')[0]}\n\n"
