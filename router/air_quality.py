@@ -18,7 +18,7 @@ from fastapi.responses import RedirectResponse
 load_dotenv(".env")
 
 router = APIRouter(prefix="/air_quality", tags=["air_quality"])
-collection = database.client["exceed06"]["air_quality"]
+collection = database.client["exceed06"]["test_db"]
 
 led_collection = database.client["exceed06"]["led_status"]
 user_collection = database.client["exceed06"]["user"]
@@ -118,7 +118,8 @@ def get_last_ten_minutes_logs():
 @router.get("/get_most_recent_log/")
 def get_most_recent_log():
     """Return the most recent log in the database."""
-    recent_log = collection.find_one({}, {"_id": 0})
+    recent_log = collection.find({}, {"_id": 0}).sort("datetime", DESCENDING)[0]
+
     return [
         {
             "temperature": recent_log["temperature"],
@@ -292,25 +293,11 @@ def send_notification_to_subscriber():
     """Send notification to user if the any number is irregular."""
     recent_log = collection.find_one({}, {"_id": 0})
     all_user = user_collection.find({}, {"_id": 0})
-    temp_status = calculate_status_temp(int(recent_log["temperature"]))
-    humid_status = calculate_status_humidity(int(recent_log["humidity"]))
     co_status = calculate_status_co(int(recent_log["CO"]))
     message = f"\nAt {recent_log['datetime'].date()} {str(recent_log['datetime'].time()).split('.')[0]}\n\n"
-    need_warning = False
-    if temp_status in ["Very Hot", "Hot", "Cold", "Very Cold"]:
-        message += (
-            f"Temperature is {temp_status} \n ({recent_log['temperature']} °C).\n\n"
-        )
-        need_warning = True
-    if humid_status in ["Too Dry", "Too Humid"]:
-        message += f"Humidity is {humid_status} \n({recent_log['humidity']} %).\n\n"
-        need_warning = True
     if co_status in ["Health affected", "Dangerous"]:
         message += (
             f"Carbon Monoxide Level is {co_status} ({recent_log['CO']} unit).\n\n"
         )
-        need_warning = True
-
-    if need_warning:
         for user in all_user:
             send_notification(message, user["token"])
