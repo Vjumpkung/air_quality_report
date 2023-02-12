@@ -59,7 +59,7 @@ def calculate_status_co(co: int) -> str:
     elif 780 <= co < 1160:
         return "Good"
     elif 1160 <= co < 1540:
-        return "Normal"
+        return "CO_Normal"
     elif 1540 <= co < 1920:
         return "Health affected"
     elif 1920 <= co:
