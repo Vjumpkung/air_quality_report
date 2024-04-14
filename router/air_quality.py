@@ -10,6 +10,7 @@ from dto.LastTenMinutesDto import LastTenMinutesDto
 from dto.UpdateDataResponseDto import UpdateDataResponseDto
 from dto.TurnOnOffSensorResponseDto import *
 from dto.LedStatusResponseDto import LedStatusResponseDto
+from dto.RecentDto import RecentDto
 from typing import List, Union
 
 load_dotenv(".env")
@@ -113,7 +114,7 @@ def get_last_ten_minutes_logs() -> List[LastTenMinutesDto]:
 
 
 @router.get("/get_most_recent_log/")
-def get_most_recent_log() -> List[LastTenMinutesDto]:
+def get_most_recent_log() -> List[RecentDto]:
     """Return the most recent log in the database."""
     recent_log = list(
         collection.find({}, {"_id": 0}).sort("datetime", DESCENDING).limit(1)
