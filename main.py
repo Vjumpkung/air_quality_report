@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Body
 from router import air_quality
 from config import database
+from dto.RootResponseDto import RootResponseDto
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -21,5 +22,5 @@ app.add_middleware(
 
 
 @app.get("/")
-def root():
+def root() -> RootResponseDto:
     return {"project": "group 6"}

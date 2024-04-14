@@ -1,19 +1,16 @@
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pymongo import DESCENDING
 from config import database
 import datetime
 from zoneinfo import ZoneInfo
 from basemodel_class.basemodel_collection import Data
-from notification import (
-    get_access_token,
-    send_notification,
-    REDIRECT_URI_NOTIFY,
-    CLIENT_ID_NOTIFY,
-    CLIENT_SECRET_NOTIFY,
-)
 from dotenv import load_dotenv
-import os
-from fastapi.responses import RedirectResponse
+from dto.OutputResponseDto import OutputResponseDto
+from dto.LastTenMinutesDto import LastTenMinutesDto
+from dto.UpdateDataResponseDto import UpdateDataResponseDto
+from dto.TurnOnOffSensorResponseDto import *
+from dto.LedStatusResponseDto import LedStatusResponseDto
+from typing import List, Union
 
 load_dotenv(".env")
 
@@ -67,12 +64,12 @@ def calculate_status_co(co: int) -> str:
 
 
 @router.get("/")
-def air_test():
+def air_test() -> OutputResponseDto:
     return {"output": "test"}
 
 
 @router.get("/get_last_ten_minutes_logs/")
-def get_last_ten_minutes_logs():
+def get_last_ten_minutes_logs() -> List[LastTenMinutesDto]:
     """Return the last 120 logs in the database."""
     if len(list(collection.find({}))) < 120:
         raise HTTPException(503, "data is not enough please try again")
@@ -116,7 +113,7 @@ def get_last_ten_minutes_logs():
 
 
 @router.get("/get_most_recent_log/")
-def get_most_recent_log():
+def get_most_recent_log() -> List[LastTenMinutesDto]:
     """Return the most recent log in the database."""
     recent_log = list(
         collection.find({}, {"_id": 0}).sort("datetime", DESCENDING).limit(1)
@@ -134,7 +131,7 @@ def get_most_recent_log():
 
 
 @router.post("/update_data/")
-def update_data(data: Data):
+def update_data(data: Data) -> UpdateDataResponseDto:
     """
     Receive data from hardware and return RGB color of temperature, humidity, and co.
     Save data to the database adding datetime with the above body.
@@ -221,7 +218,11 @@ def update_data(data: Data):
 
 
 @router.post("/turn_on/{sensor_type}/")
-def turn_on_led(sensor_type: str):
+def turn_on_led(
+    sensor_type: str,
+) -> Union[
+    HumiditySensorResponseDto, CoSensorResponseDto, TemperatureSensorResponseDto
+]:
     """
     sensor_type = "temperature"/ "humidity" / "co"
     Set status of LED that show status of {sensor_type} to True.
@@ -229,12 +230,15 @@ def turn_on_led(sensor_type: str):
     if sensor_type not in ["temperature", "humidity", "co"]:
         return HTTPException(status_code=406, detail="Sensor type is invalid.")
     led_collection.update_one({"sensor_type": sensor_type}, {"$set": {"status": True}})
-    print(f"led of {sensor_type} is turned on")
     return {sensor_type: True}
 
 
 @router.post("/turn_off/{sensor_type}/")
-def turn_off_led(sensor_type: str):
+def turn_off_led(
+    sensor_type: str,
+) -> Union[
+    HumiditySensorResponseDto, CoSensorResponseDto, TemperatureSensorResponseDto
+]:
     """
     sensor_type = "temperature"/ "humidity" / "co"
     Set status of LED that show status of {sensor_type} to False.
@@ -242,12 +246,11 @@ def turn_off_led(sensor_type: str):
     if sensor_type not in ["temperature", "humidity", "co"]:
         return HTTPException(status_code=406, detail="Sensor type is invalid.")
     led_collection.update_one({"sensor_type": sensor_type}, {"$set": {"status": False}})
-    print(f"led of {sensor_type} is turned off")
     return {sensor_type: False}
 
 
 @router.get("/get_led_status/")
-def get_led_status():
+def get_led_status() -> LedStatusResponseDto:
     """Get status of all led."""
     result = {}
     for i in led_collection.find({}, {"_id": False}):
@@ -255,52 +258,10 @@ def get_led_status():
     return result
 
 
-@router.get("/clear_database/")
+@router.get("/clear_database/", status_code=204)
 def clear_database():
-    """Delete data older than 24 hours."""
+    """Delete data older than 20 min."""
     collection.delete_many(
-        {
-            "datetime": {
-                "$lt": datetime.datetime.now(ZoneInfo("Asia/Bangkok"))
-                - datetime.timedelta(days=1)
-            }
-        }
+        {"datetime": {"$lt": datetime.datetime.now() - datetime.timedelta(minutes=20)}}
     )
-    return {"status": "delete complete"}
-
-
-@router.get("/subscribe_line_notify/")
-def subscribe_line_notify():
-    """Redirect to LINE Notify authorization endpoint."""
-    url = (
-        f"https://notify-bot.line.me/oauth/authorize?response_type=code&client_id={CLIENT_ID_NOTIFY}"
-        f"&redirect_uri={REDIRECT_URI_NOTIFY}&scope=notify&state=testing123 "
-    )
-    return RedirectResponse(url)
-
-
-@router.get("/subscribe_line_notify_callback/")
-def subscribe_line_notify_callback(code: str):
-    """Get token from the given code and store it in the database."""
-    token = get_access_token(code)
-    send_notification("Thank you for subscribing us", token)
-    user_collection.insert_one({"token": token})
-    redirect_url = os.getenv("frontend")
-    return RedirectResponse(redirect_url)
-
-
-@router.get("/send_notification_to_subscriber/")
-def send_notification_to_subscriber():
-    """Send notification to user if the any number is irregular."""
-    recent_log = list(
-        collection.find({}, {"_id": 0}).sort("datetime", DESCENDING).limit(1)
-    )[0]
-    all_user = user_collection.find({}, {"_id": 0})
-    co_status = calculate_status_co(int(recent_log["CO"]))
-    message = f"\nAt {recent_log['datetime'].date()} {str(recent_log['datetime'].time()).split('.')[0]}\n\n"
-    if co_status in ["Health affected", "Dangerous"]:
-        message += (
-            f"Carbon Monoxide Level is {co_status} ({recent_log['CO']} unit).\n\n"
-        )
-        for user in all_user:
-            send_notification(message, user["token"])
+    return Response(status_code=204)
