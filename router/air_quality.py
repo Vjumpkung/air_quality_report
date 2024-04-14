@@ -114,7 +114,7 @@ def get_most_recent_log() -> List[RecentDto]:
     ]
 
 
-@router.post("/update_data/")
+@router.post("/update_data/", status_code=201)
 def update_data(data: Data) -> UpdateDataResponseDto:
     """
     Receive data from hardware and return RGB color of temperature, humidity, and co.
@@ -201,7 +201,7 @@ def update_data(data: Data) -> UpdateDataResponseDto:
     return color
 
 
-@router.post("/turn_on/{sensor_type}/")
+@router.post("/turn_on/{sensor_type}/", status_code=201)
 def turn_on_led(
     sensor_type: str,
 ) -> Union[
@@ -217,7 +217,7 @@ def turn_on_led(
     return {sensor_type: True}
 
 
-@router.post("/turn_off/{sensor_type}/")
+@router.post("/turn_off/{sensor_type}/", status_code=201)
 def turn_off_led(
     sensor_type: str,
 ) -> Union[
