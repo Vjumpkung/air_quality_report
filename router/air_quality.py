@@ -74,43 +74,26 @@ def get_last_ten_minutes_logs() -> List[LastTenMinutesDto]:
     """Return the last 120 logs in the database."""
     if len(list(collection.find({}))) < 120:
         raise HTTPException(503, "data is not enough please try again")
-    lst = []
-    time = 1
-    skip = 0
-    for j in range(10):
-        avg_temp_lst = []
-        avg_humid_lst = []
-        avg_co_lst = []
-        for i in (
-            collection.find({}, {"_id": 0})
-            .sort("datetime", DESCENDING)
-            .limit(12)
-            .skip(skip)
-        ):
-            avg_temp_lst.append(i["temperature"])
-            avg_humid_lst.append(i["humidity"])
-            avg_co_lst.append(i["CO"])
-        lst.append(
+
+    lst = list(collection.find({}, {"_id": 0}).sort("datetime", DESCENDING).limit(120))
+    res = []
+    for i in range(0, len(lst), 12):
+        temp = lst[i : i + 12]
+        temperature_avg = sum([x["temperature"] for x in temp]) // 12
+        humidity_avg = sum([x["humidity"] for x in temp]) // 12
+        co_avg = sum([x["CO"] for x in temp]) // 12
+        res.append(
             {
-                "time": time,
-                "temperature": int(sum(avg_temp_lst) / len(avg_temp_lst)),
-                "humidity": int(sum(avg_humid_lst) / len(avg_humid_lst)),
-                "CO": int(sum(avg_co_lst) / len(avg_co_lst)),
-                "temperature_status": calculate_status_temp(
-                    sum(avg_temp_lst) / len(avg_temp_lst)
-                ),
-                "humidity_status": calculate_status_humidity(
-                    sum(avg_humid_lst) / len(avg_humid_lst)
-                ),
-                "CO_status": calculate_status_co(sum(avg_co_lst) / len(avg_co_lst)),
+                "time": i // 12 + 1,
+                "temperature": temperature_avg,
+                "humidity": humidity_avg,
+                "CO": co_avg,
+                "temperature_status": calculate_status_temp(temperature_avg),
+                "humidity_status": calculate_status_humidity(temperature_avg),
+                "CO_status": calculate_status_co(co_avg),
             }
         )
-        time += 1
-        skip += 12
-        avg_temp_lst.clear()
-        avg_humid_lst.clear()
-        avg_co_lst.clear()
-    return lst[::-1]
+    return res
 
 
 @router.get("/get_most_recent_log/")
